@@ -95,6 +95,15 @@ export default function Stats() {
         <span style={styleForPercentageElement}>
           <PuttPercentageComponent
             putts={puttsForADayOrdered.filter(
+              (p) => p.distance >= 7 && p.distance < 10
+            )}
+            header="7-9m"
+          />
+        </span>{" "}
+        <br />
+        <span style={styleForPercentageElement}>
+          <PuttPercentageComponent
+            putts={puttsForADayOrdered.filter(
               (p) => p.distance >= 10 && p.distance < 21
             )}
             header="C2"

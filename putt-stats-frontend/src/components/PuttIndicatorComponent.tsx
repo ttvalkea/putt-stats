@@ -7,15 +7,27 @@ type PuttIndicatorComponentProps = {
 
 function PuttIndicatorComponent(props: PuttIndicatorComponentProps) {
   const { putt } = props;
+  const isBullseyeDistance = putt.distance < 4;
+  const isC2Distance = putt.distance >= 10;
+  let backgroundColor = "#1e3";
+  if (!putt.isMade) {
+    backgroundColor = "#a00";
+  } else if (isBullseyeDistance) {
+    backgroundColor = "#0a0";
+  } else if (isC2Distance) {
+    backgroundColor = "#6f4";
+  }
+
   const style = {
-    backgroundColor: putt.isMade ? "#1e3" : "#a00",
+    backgroundColor,
     color: putt.isMade ? "#111" : "#fff",
     padding: "6px",
     margin: "4px",
-    fontWeight: "bold",
+    fontWeight: isC2Distance ? "700" : isBullseyeDistance ? "400" : "500",
     borderRadius: "25px",
     opacity: putt.isUndone ? "20%" : "100%",
     width: "25px",
+    fontSize: "18px",
   };
 
   let typeColor = "#dde"; // PuttType.Test or PuttType.Unknown

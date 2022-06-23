@@ -44,8 +44,14 @@ function ButtonComponent(props: ButtonComponentProps) {
     width: 90,
     marginRight: 40,
     marginBottom: 5,
+    borderRadius: 10,
   };
-  const missStyle = { backgroundColor: "red", width: 90, marginBottom: 5 };
+  const missStyle = {
+    backgroundColor: "red",
+    width: 90,
+    marginBottom: 5,
+    borderRadius: 10,
+  };
   return (
     <button
       style={props.puttResult === PuttResult.Make ? makeStyle : missStyle}
