@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+.putt-result-marking-success-toast {
+  color: #2a3 !important;
+}

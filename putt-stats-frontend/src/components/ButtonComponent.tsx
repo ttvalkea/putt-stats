@@ -1,4 +1,4 @@
-import { toast } from "react-toastify";
+import { toast, ToastOptions } from "react-toastify";
 import "../App.css";
 import { defaultPuttType, defaultUserId, PuttResult } from "../constants";
 import { markNewPuttResult } from "../database";
@@ -30,10 +30,14 @@ const markPuttResult = async (distance: number, puttResult: PuttResult) => {
     const toastText = `Putt ${
       puttResult === PuttResult.Make ? "made" : "missed"
     } from ${distance === 21 ? "> 20" : distance} m`;
+    const toastOptions: ToastOptions = {
+      position: toast.POSITION.BOTTOM_RIGHT,
+      className: "putt-result-marking-success-toast",
+    };
     if (puttResult === PuttResult.Make) {
-      toast.success(toastText);
+      toast.success(toastText, toastOptions);
     } else {
-      toast.warn(toastText);
+      toast.warn(toastText, toastOptions);
     }
   }
 };
