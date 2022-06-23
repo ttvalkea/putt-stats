@@ -53,10 +53,20 @@ function App() {
     }
   };
 
+  const environmentTextStyle = {
+    fontSize: "10px",
+    fontWeight: 200,
+    marginLeft: "10px",
+  };
+  const environment = process.env.NODE_ENV;
+
   return (
     <div className="App">
       <ToastContainer />
-      <h1>Putt results</h1>
+      <h1>
+        Putt results
+        <span style={environmentTextStyle}>{environment}</span>{" "}
+      </h1>
       {buttonComponents}
       {/* Distance over 20 meters is marked as 21 meters */}
       <ButtonComponent distance={21} puttResult={PuttResult.Make} />
