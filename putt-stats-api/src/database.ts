@@ -1,6 +1,12 @@
 import mysql, { Connection } from "promise-mysql";
 import dotenv from "dotenv";
-import { apiPuttResult, dbPuttResult, newPuttInsert, user } from "./types";
+import {
+  apiPuttResult,
+  dbPuttResult,
+  newPuttInsert,
+  puttUpdate,
+  user,
+} from "./types";
 dotenv.config();
 import http from "http";
 import { mapDbPuttResultToApiPuttResult } from "./utilities";
@@ -146,6 +152,38 @@ export const undoLastPutt = async (
     }
   } else {
     console.log("Cannot undo last putt result. No database connection.");
+    return false;
+  }
+};
+
+export const updatePuttResult = async (
+  connection: Connection,
+  updateData: puttUpdate
+): Promise<boolean> => {
+  console.log("Updating a putt result.");
+
+  if (connection) {
+    try {
+      // Using parseInt for all values to protect against malicious input data in the form of SQL injection
+      const query = `UPDATE puttResult SET distance=${parseInt(
+        updateData.distance as any
+      )}, isMade=${updateData.isMade ? 1 : 0}, type=${parseInt(
+        updateData.type as any
+      )}, isUndone=${updateData.isUndone ? 1 : 0} WHERE puttResultId=${parseInt(
+        updateData.puttResultId as any
+      )};`;
+      await connection.query(query);
+      console.log("Putt result updated: " + JSON.stringify(updateData));
+      return true;
+    } catch (error) {
+      console.log("Error updating a putt result:");
+      console.log(error);
+      return false;
+    }
+  } else {
+    console.log(
+      "Cannot insert putt result to database. No database connection."
+    );
     return false;
   }
 };

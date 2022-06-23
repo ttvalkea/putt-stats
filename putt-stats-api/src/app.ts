@@ -4,10 +4,11 @@ import {
   queryAllPuttResults,
   queryAllUsers,
   undoLastPutt,
+  updatePuttResult,
 } from "./database";
 import express, { NextFunction, Request, Response } from "express";
 import { Connection } from "promise-mysql";
-import { newPuttInsert } from "./types";
+import { newPuttInsert, puttUpdate } from "./types";
 import dotenv from "dotenv";
 import { checkHeaders, getUserIdFromPath } from "./utilities";
 
@@ -106,6 +107,25 @@ app.get("/users", async (request: Request, response: Response) => {
     }
     const allUsers = await queryAllUsers(connection);
     response.end(JSON.stringify(allUsers));
+  }
+  response.status(401);
+  response.end();
+});
+
+// Update a putt result. Returns true if succeeds, false otherwise.
+app.patch("/update-putt", async (request: Request, response: Response) => {
+  if (checkHeaders(request)) {
+    if (!connection) {
+      connection = await createConnection();
+    }
+    const puttUpdate: puttUpdate | undefined = request.body;
+    if (puttUpdate) {
+      console.log("Updating an existing putt: " + JSON.stringify(puttUpdate));
+      const updateResult = await updatePuttResult(connection, puttUpdate);
+      response.end(JSON.stringify(updateResult));
+    } else {
+      response.end("Error marking a putt: No putt data in the request body");
+    }
   }
   response.status(401);
   response.end();

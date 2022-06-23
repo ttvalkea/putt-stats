@@ -18,6 +18,14 @@ export type newPuttInsert = {
   type: PuttType;
 };
 
+export type puttUpdate = {
+  puttResultId: number;
+  distance: number;
+  isMade: boolean;
+  type: PuttType;
+  isUndone: boolean;
+};
+
 export type user = {
   userId: number;
   name: string;

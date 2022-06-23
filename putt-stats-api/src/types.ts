@@ -32,6 +32,14 @@ export type newPuttInsert = {
   type: PuttType;
 };
 
+export type puttUpdate = {
+  puttResultId: number;
+  distance: number;
+  isMade: boolean;
+  type: PuttType;
+  isUndone: boolean;
+};
+
 export enum PuttType {
   Test = 1,
   Practice = 2,
