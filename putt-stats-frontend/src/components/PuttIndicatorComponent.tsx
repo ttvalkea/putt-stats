@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { PuttType } from "../constants";
+import { updatePuttResult } from "../database";
 import { apiPuttResult, puttUpdate } from "../types";
 import PuttUpdateModalComponent from "./PuttUpdateModalComponent";
 
@@ -45,48 +47,39 @@ function PuttIndicatorComponent(props: PuttIndicatorComponentProps) {
   } else if (putt.type === PuttType.Practice) {
     typeColor = "#ee4";
   }
-
-  // TODO: Remove outcommented if not needed
-  // const updatePutt = async (puttUpdate: puttUpdate) => {
-  //   const updateResult: boolean = await updatePuttResult(puttUpdate);
-  //   if (!updateResult) {
-  //     toast.error("An error occured trying to update a putt.");
-  //   } else if (updateResult === true) {
-  //     toast.success("Putt succesfully updated.");
-  //   }
-  // };
-
-  const openEditModal = async (putt: apiPuttResult) => {
-    setIsUpdateModalOpen(true);
-    console.log(putt);
-
-    // // TODO: These values need to come from the modal
-    const puttUpdate: puttUpdate = {
-      distance: putt.distance,
-      isMade: putt.isMade,
-      isUndone: putt.isUndone,
-      puttResultId: putt.puttResultId,
-      type: putt.type,
-    };
-
-    // await updatePutt(puttUpdate);
-    const updatedPuttForState: apiPuttResult = {
-      ...puttUpdate,
-      name: putt.name,
-      puttTimestamp: putt.puttTimestamp,
-      userId: putt.userId,
-    };
-    setUpdatedPutt(updatedPuttForState);
+  const updatePutt = async (puttUpdate: puttUpdate) => {
+    const updateResult: boolean = await updatePuttResult(puttUpdate);
+    if (!updateResult) {
+      toast.error("An error occured trying to update a putt.");
+    } else if (updateResult === true) {
+      toast.success("Putt succesfully updated.");
+    }
   };
 
-  const handleUpdateModalClose = (puttUpdate: puttUpdate) => {
+  const openEditModal = () => {
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateModalClose = async (puttUpdate: puttUpdate | undefined) => {
     setIsUpdateModalOpen(false);
-    console.log(puttUpdate);
+
+    // When the modal is closed normally, puttUpdate is undefined and no update is done.
+    // When Update button is clicked, puttUpdate will be defined.
+    if (puttUpdate) {
+      await updatePutt(puttUpdate);
+      const updatedPuttForState: apiPuttResult = {
+        ...puttUpdate,
+        name: putt.name,
+        puttTimestamp: putt.puttTimestamp,
+        userId: putt.userId,
+      };
+      setUpdatedPutt(updatedPuttForState);
+    }
   };
 
   return (
     <div style={{ backgroundColor: typeColor }}>
-      <div style={style} onClick={() => openEditModal(putt)}>
+      <div style={style} onClick={openEditModal}>
         {putt.distance === 21 ? "20+" : putt.distance}
       </div>
       <PuttUpdateModalComponent
