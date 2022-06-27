@@ -13,7 +13,9 @@ import { mapDbPuttResultToApiPuttResult } from "./utilities";
 
 let retriedToConnectAmount = 0;
 
-export const createConnection = async (): Promise<Connection> => {
+export const createConnection = async (
+  doRetryAttempt: boolean = true
+): Promise<Connection> => {
   const maximumRetryConnectionCreationAttempts = 3;
 
   console.log("Creating database connection.");
@@ -38,7 +40,10 @@ export const createConnection = async (): Promise<Connection> => {
     return connection;
   } catch (exception) {
     retriedToConnectAmount++;
-    if (retriedToConnectAmount <= maximumRetryConnectionCreationAttempts) {
+    if (
+      retriedToConnectAmount <= maximumRetryConnectionCreationAttempts &&
+      doRetryAttempt
+    ) {
       console.log(
         `Trying again to form a database connection. Attempt number ${
           retriedToConnectAmount + 1
@@ -81,12 +86,16 @@ export const queryAllPuttResults = async (
     } catch (error) {
       console.log("Error querying the database for all putt results:");
       console.log(error);
+
+      await postFatalErrorDbConnectionRecreation(connection, error);
+
       return [];
     }
   } else {
     console.log(
       "Cannot query database for putt results. No database connection."
     );
+    await postFatalErrorDbConnectionRecreation(connection);
     return [];
   }
 };
@@ -111,12 +120,14 @@ export const insertNewPuttResult = async (
     } catch (error) {
       console.log("Error inserting a putt result:");
       console.log(error);
+      await postFatalErrorDbConnectionRecreation(connection, error);
       return false;
     }
   } else {
     console.log(
       "Cannot insert putt result to database. No database connection."
     );
+    await postFatalErrorDbConnectionRecreation(connection);
     return false;
   }
 };
@@ -148,10 +159,12 @@ export const undoLastPutt = async (
     } catch (error) {
       console.log("Error undoing the last putt result:");
       console.log(error);
+      await postFatalErrorDbConnectionRecreation(connection, error);
       return false;
     }
   } else {
     console.log("Cannot undo last putt result. No database connection.");
+    await postFatalErrorDbConnectionRecreation(connection);
     return false;
   }
 };
@@ -178,12 +191,14 @@ export const updatePuttResult = async (
     } catch (error) {
       console.log("Error updating a putt result:");
       console.log(error);
+      await postFatalErrorDbConnectionRecreation(connection, error);
       return false;
     }
   } else {
     console.log(
       "Cannot insert putt result to database. No database connection."
     );
+    await postFatalErrorDbConnectionRecreation(connection);
     return false;
   }
 };
@@ -205,10 +220,24 @@ export const queryAllUsers = async (
     } catch (error) {
       console.log("Error querying the database for all users:");
       console.log(error);
+      await postFatalErrorDbConnectionRecreation(connection, error);
       return [];
     }
   } else {
     console.log("Cannot query database for users. No database connection.");
+    await postFatalErrorDbConnectionRecreation(connection);
     return [];
+  }
+};
+
+const postFatalErrorDbConnectionRecreation = async (
+  connection: Connection,
+  error: any = undefined
+) => {
+  if (!error || error.fatal) {
+    console.log(
+      "Fatal error occured. Trying to recreate database connection..."
+    );
+    connection = await createConnection(false);
   }
 };
