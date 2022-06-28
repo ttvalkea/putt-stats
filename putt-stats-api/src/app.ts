@@ -53,8 +53,13 @@ app.get(
         connection = await createConnection();
       }
       const userId = getUserIdFromPath(request);
-      const allPuttResults = await queryAllPuttResults(connection, userId);
-      response.end(JSON.stringify(allPuttResults));
+      let allPuttResults = await queryAllPuttResults(connection, userId);
+      // Recreate db connection if shouldDoDbReconnect === true and redo the query.
+      if (allPuttResults.shouldRecreateDatabaseConnection) {
+        connection = await createConnection();
+        allPuttResults = await queryAllPuttResults(connection, userId);
+      }
+      response.end(JSON.stringify(allPuttResults.result));
     }
     response.status(401);
     response.end();
@@ -72,8 +77,13 @@ app.post("/mark-putt", async (request: Request, response: Response) => {
       console.log(
         "Inserting a new row into puttResult table: " + JSON.stringify(puttData)
       );
-      const insertResult = await insertNewPuttResult(connection, puttData);
-      response.end(JSON.stringify(insertResult));
+      let insertResult = await insertNewPuttResult(connection, puttData);
+      // Recreate db connection if shouldDoDbReconnect === true and redo the query.
+      if (insertResult.shouldRecreateDatabaseConnection) {
+        connection = await createConnection();
+        insertResult = await insertNewPuttResult(connection, puttData);
+      }
+      response.end(JSON.stringify(insertResult.result));
     } else {
       response.end("Error marking a putt: No putt data in the request body");
     }
@@ -91,8 +101,13 @@ app.patch(
         connection = await createConnection();
       }
       const userId = getUserIdFromPath(request);
-      const undoResult = await undoLastPutt(connection, userId);
-      response.end(JSON.stringify(undoResult));
+      let undoResult = await undoLastPutt(connection, userId);
+      // Recreate db connection if shouldDoDbReconnect === true and redo the query.
+      if (undoResult.shouldRecreateDatabaseConnection) {
+        connection = await createConnection();
+        undoResult = await undoLastPutt(connection, userId);
+      }
+      response.end(JSON.stringify(undoResult.result));
     }
     response.status(401);
     response.end();
@@ -105,8 +120,13 @@ app.get("/users", async (request: Request, response: Response) => {
     if (!connection) {
       connection = await createConnection();
     }
-    const allUsers = await queryAllUsers(connection);
-    response.end(JSON.stringify(allUsers));
+    let allUsers = await queryAllUsers(connection);
+    // Recreate db connection if shouldDoDbReconnect === true and redo the query.
+    if (allUsers.shouldRecreateDatabaseConnection) {
+      connection = await createConnection();
+      allUsers = await queryAllUsers(connection);
+    }
+    response.end(JSON.stringify(allUsers.result));
   }
   response.status(401);
   response.end();
@@ -121,8 +141,15 @@ app.patch("/update-putt", async (request: Request, response: Response) => {
     const puttUpdate: puttUpdate | undefined = request.body;
     if (puttUpdate) {
       console.log("Updating an existing putt: " + JSON.stringify(puttUpdate));
-      const updateResult = await updatePuttResult(connection, puttUpdate);
-      response.end(JSON.stringify(updateResult));
+      let updateResult = await updatePuttResult(connection, puttUpdate);
+
+      // Recreate db connection if shouldDoDbReconnect === true and redo the query.
+      if (updateResult.shouldRecreateDatabaseConnection) {
+        connection = await createConnection();
+        updateResult = await updatePuttResult(connection, puttUpdate);
+      }
+
+      response.end(JSON.stringify(updateResult.result));
     } else {
       response.end("Error marking a putt: No putt data in the request body");
     }

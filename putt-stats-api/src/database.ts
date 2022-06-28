@@ -64,7 +64,10 @@ export const createConnection = async (
 export const queryAllPuttResults = async (
   connection: Connection,
   userId: number | undefined
-): Promise<apiPuttResult[]> => {
+): Promise<{
+  result: apiPuttResult[];
+  shouldRecreateDatabaseConnection: boolean;
+}> => {
   console.log(`Querying for all putt results for userId ${userId}.`);
 
   if (connection) {
@@ -80,30 +83,31 @@ export const queryAllPuttResults = async (
         "All putt results queried successfully. Rows returned: " +
           puttResults.length
       );
-      return puttResults.map((dbPuttResult: dbPuttResult) =>
-        mapDbPuttResultToApiPuttResult(dbPuttResult)
-      );
+
+      return {
+        result: puttResults.map((dbPuttResult: dbPuttResult) =>
+          mapDbPuttResultToApiPuttResult(dbPuttResult)
+        ),
+        shouldRecreateDatabaseConnection: false,
+      };
     } catch (error) {
       console.log("Error querying the database for all putt results:");
       console.log(error);
 
-      await postFatalErrorDbConnectionRecreation(connection, error);
-
-      return [];
+      return { result: [], shouldRecreateDatabaseConnection: true };
     }
   } else {
     console.log(
       "Cannot query database for putt results. No database connection."
     );
-    await postFatalErrorDbConnectionRecreation(connection);
-    return [];
+    return { result: [], shouldRecreateDatabaseConnection: true };
   }
 };
 
 export const insertNewPuttResult = async (
   connection: Connection,
   puttData: newPuttInsert
-): Promise<boolean> => {
+): Promise<{ result: boolean; shouldRecreateDatabaseConnection: boolean }> => {
   console.log("Inserting a new putt result");
 
   if (connection) {
@@ -116,19 +120,17 @@ export const insertNewPuttResult = async (
       }, 0, ${parseInt(puttData.type as any)}, CURRENT_TIMESTAMP());`;
       await connection.query(query);
       console.log("Putt result inserted: " + JSON.stringify(puttData));
-      return true;
+      return { result: true, shouldRecreateDatabaseConnection: false };
     } catch (error) {
       console.log("Error inserting a putt result:");
       console.log(error);
-      await postFatalErrorDbConnectionRecreation(connection, error);
-      return false;
+      return { result: false, shouldRecreateDatabaseConnection: true };
     }
   } else {
     console.log(
       "Cannot insert putt result to database. No database connection."
     );
-    await postFatalErrorDbConnectionRecreation(connection);
-    return false;
+    return { result: false, shouldRecreateDatabaseConnection: true };
   }
 };
 
@@ -136,7 +138,10 @@ export const insertNewPuttResult = async (
 export const undoLastPutt = async (
   connection: Connection,
   userId: number
-): Promise<apiPuttResult | boolean> => {
+): Promise<{
+  result: apiPuttResult | boolean;
+  shouldRecreateDatabaseConnection: boolean;
+}> => {
   console.log(`Undoing last putt for userId ${userId}.`);
 
   if (connection) {
@@ -150,29 +155,30 @@ export const undoLastPutt = async (
       const undoResult: any = await connection.query(undoQuery);
       if (undoResult?.changedRows === 1) {
         // Return the undone row's data if undo is successful
-        return rowToUndo.map((dbPuttResult: dbPuttResult) =>
-          mapDbPuttResultToApiPuttResult(dbPuttResult)
-        )[0];
+        return {
+          result: rowToUndo.map((dbPuttResult: dbPuttResult) =>
+            mapDbPuttResultToApiPuttResult(dbPuttResult)
+          )[0],
+          shouldRecreateDatabaseConnection: false,
+        };
       } else if (undoResult?.changedRows === 0) {
-        return true; // No errors, but also no rows to undo.
+        return { result: true, shouldRecreateDatabaseConnection: false }; // No errors, but also no rows to undo.
       }
     } catch (error) {
       console.log("Error undoing the last putt result:");
       console.log(error);
-      await postFatalErrorDbConnectionRecreation(connection, error);
-      return false;
+      return { result: false, shouldRecreateDatabaseConnection: true };
     }
   } else {
     console.log("Cannot undo last putt result. No database connection.");
-    await postFatalErrorDbConnectionRecreation(connection);
-    return false;
+    return { result: false, shouldRecreateDatabaseConnection: true };
   }
 };
 
 export const updatePuttResult = async (
   connection: Connection,
   updateData: puttUpdate
-): Promise<boolean> => {
+): Promise<{ result: boolean; shouldRecreateDatabaseConnection: boolean }> => {
   console.log("Updating a putt result.");
 
   if (connection) {
@@ -187,25 +193,23 @@ export const updatePuttResult = async (
       )};`;
       await connection.query(query);
       console.log("Putt result updated: " + JSON.stringify(updateData));
-      return true;
+      return { result: true, shouldRecreateDatabaseConnection: false };
     } catch (error) {
       console.log("Error updating a putt result:");
       console.log(error);
-      await postFatalErrorDbConnectionRecreation(connection, error);
-      return false;
+      return { result: false, shouldRecreateDatabaseConnection: true };
     }
   } else {
     console.log(
       "Cannot insert putt result to database. No database connection."
     );
-    await postFatalErrorDbConnectionRecreation(connection);
-    return false;
+    return { result: false, shouldRecreateDatabaseConnection: true };
   }
 };
 
 export const queryAllUsers = async (
   connection: Connection
-): Promise<user[]> => {
+): Promise<{ result: user[]; shouldRecreateDatabaseConnection: boolean }> => {
   console.log("Querying for all users.");
 
   if (connection) {
@@ -216,28 +220,17 @@ export const queryAllUsers = async (
         "All users queried successfully. Rows returned: " +
           userQueryResults.length
       );
-      return userQueryResults;
+      return {
+        result: userQueryResults,
+        shouldRecreateDatabaseConnection: false,
+      };
     } catch (error) {
       console.log("Error querying the database for all users:");
       console.log(error);
-      await postFatalErrorDbConnectionRecreation(connection, error);
-      return [];
+      return { result: [], shouldRecreateDatabaseConnection: true };
     }
   } else {
     console.log("Cannot query database for users. No database connection.");
-    await postFatalErrorDbConnectionRecreation(connection);
-    return [];
-  }
-};
-
-const postFatalErrorDbConnectionRecreation = async (
-  connection: Connection,
-  error: any = undefined
-) => {
-  if (!error || error.fatal) {
-    console.log(
-      "Fatal error occured. Trying to recreate database connection..."
-    );
-    connection = await createConnection(false);
+    return { result: [], shouldRecreateDatabaseConnection: true };
   }
 };
