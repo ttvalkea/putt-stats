@@ -9,16 +9,20 @@ function UserSelectionComponent() {
   const users = useSelector((state: any) => state.users.users);
   const dispatch = useDispatch();
 
+  const [isLoadingGetUsers, setIsLoadingGetUsers] = useState(false);
+
   useEffect(() => {
     // When the app is opened, fetch the users and store them into the store.
     if (!users || users.length === 0) {
       const fetchData = async () => {
+        setIsLoadingGetUsers(true);
         const users = await getUsers();
         if (!users) {
           toast.error("An error occured trying to get users.");
         } else {
           dispatch(setUsers(users));
         }
+        setIsLoadingGetUsers(false);
       };
 
       fetchData();
@@ -66,6 +70,11 @@ function UserSelectionComponent() {
       }}
     >
       Selected user:
+      {isLoadingGetUsers ? (
+        <div className="loader" style={{ marginLeft: 10 }}></div>
+      ) : (
+        <></>
+      )}
       {userSelectionElements}
     </div>
   );

@@ -40,3 +40,24 @@
 .putt-result-marking-success-toast {
   color: #2a3 !important;
 }
+
+.loader {
+  border: 4px solid #dfdfdf;
+  border-top: 4px solid #6318ee;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 2s linear infinite;
+
+  
+}
+
+.loader.tiny {
+  width: 6px;
+  height: 6px;
+  }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

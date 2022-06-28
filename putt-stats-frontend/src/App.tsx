@@ -8,8 +8,11 @@ import { apiPuttResult } from "./types";
 import { Link } from "react-router-dom";
 import PuttTypeSelectionComponent from "./components/PuttTypeSelectionComponent";
 import UserSelectionComponent from "./components/UserSelectionComponent";
+import { useState } from "react";
 
 function App() {
+  const [isLoadingUndo, setIsLoadingUndo] = useState(false);
+
   const buttonComponents: any[] = [];
 
   for (let index = 1; index <= 20; index++) {
@@ -37,6 +40,7 @@ function App() {
   };
 
   const undoPreviousPutt = async () => {
+    setIsLoadingUndo(true);
     const undoResult: apiPuttResult | boolean = await undoLastPuttResult();
     if (!undoResult) {
       toast.error("An error occured trying to undo a putt.");
@@ -51,6 +55,7 @@ function App() {
         } m ${lastPuttResult ? "make" : "miss"})`
       );
     }
+    setIsLoadingUndo(false);
   };
 
   const environmentTextStyle = {
@@ -71,8 +76,14 @@ function App() {
       {/* Distance over 20 meters is marked as 21 meters */}
       <ButtonComponent distance={21} puttResult={PuttResult.Make} />
       <ButtonComponent distance={21} puttResult={PuttResult.Miss} />
-      <br />
-      <br />
+      {isLoadingUndo ? (
+        <div
+          className="loader"
+          style={{ marginLeft: "auto", marginRight: "auto", marginTop: 5 }}
+        ></div>
+      ) : (
+        <div style={{ height: 29 }}></div>
+      )}
       <Link
         to="/stats"
         style={{ paddingBottom: 50, paddingRight: 30, fontSize: 20 }}

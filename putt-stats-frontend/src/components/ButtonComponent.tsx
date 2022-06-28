@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { toast, ToastOptions } from "react-toastify";
 import "../App.css";
 import { defaultPuttType, defaultUserId, PuttResult } from "../constants";
@@ -13,36 +14,40 @@ type ButtonComponentProps = {
   distance: number;
 };
 
-const markPuttResult = async (distance: number, puttResult: PuttResult) => {
-  const markingResult = await markNewPuttResult({
-    distance,
-    isMade: puttResult === PuttResult.Make,
-    userId: getUserIdFromLocalStorage() ?? defaultUserId,
-    type: getPuttTypeFromLocalStorage() ?? defaultPuttType,
-  } as newPuttInsert);
-  if (!markingResult) {
-    toast.error(
-      `An error occured trying to mark a putt from ${
-        distance === 21 ? "> 20" : distance
-      } m`
-    );
-  } else {
-    const toastText = `Putt ${
-      puttResult === PuttResult.Make ? "made" : "missed"
-    } from ${distance === 21 ? "> 20" : distance} m`;
-    const toastOptions: ToastOptions = {
-      position: toast.POSITION.BOTTOM_RIGHT,
-      className: "putt-result-marking-success-toast",
-    };
-    if (puttResult === PuttResult.Make) {
-      toast.success(toastText, toastOptions);
-    } else {
-      toast.warn(toastText, toastOptions);
-    }
-  }
-};
-
 function ButtonComponent(props: ButtonComponentProps) {
+  const [isLoadingMarkResult, setIsLoadingMarkResult] = useState(false);
+
+  const markPuttResult = async (distance: number, puttResult: PuttResult) => {
+    setIsLoadingMarkResult(true);
+    const markingResult = await markNewPuttResult({
+      distance,
+      isMade: puttResult === PuttResult.Make,
+      userId: getUserIdFromLocalStorage() ?? defaultUserId,
+      type: getPuttTypeFromLocalStorage() ?? defaultPuttType,
+    } as newPuttInsert);
+    if (!markingResult) {
+      toast.error(
+        `An error occured trying to mark a putt from ${
+          distance === 21 ? "> 20" : distance
+        } m`
+      );
+    } else {
+      const toastText = `Putt ${
+        puttResult === PuttResult.Make ? "made" : "missed"
+      } from ${distance === 21 ? "> 20" : distance} m`;
+      const toastOptions: ToastOptions = {
+        position: toast.POSITION.BOTTOM_RIGHT,
+        className: "putt-result-marking-success-toast",
+      };
+      if (puttResult === PuttResult.Make) {
+        toast.success(toastText, toastOptions);
+      } else {
+        toast.warn(toastText, toastOptions);
+      }
+    }
+    setIsLoadingMarkResult(false);
+  };
+
   const makeStyle = {
     backgroundColor: "#2d3",
     width: 90,
@@ -62,7 +67,14 @@ function ButtonComponent(props: ButtonComponentProps) {
       id={`button-${props.puttResult}-${props.distance}`}
       onClick={() => markPuttResult(props.distance, props.puttResult)}
     >
-      {props.distance === 21 ? "> 20" : props.distance} m
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {props.distance === 21 ? "> 20" : props.distance} m
+        {isLoadingMarkResult ? (
+          <div className="loader tiny" style={{ marginLeft: 3 }}></div>
+        ) : (
+          <></>
+        )}
+      </div>
     </button>
   );
 }

@@ -12,18 +12,23 @@ import PuttIndicatorComponent from "../components/PuttIndicatorComponent";
 export default function Stats() {
   const [stats, setStats] = useState([] as apiPuttResult[]);
   const [showUndonePutts, setShowUndonePutts] = useState(false);
+
+  const [isLoadingGetResults, setIsLoadingGetResults] = useState(false);
+
   const handleShowUndonePuttsChange = () => {
     setShowUndonePutts(!showUndonePutts);
   };
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoadingGetResults(true);
       const puttResults = await getPuttResults();
       if (!puttResults) {
         toast.error("An error occured trying to get putt results.");
       } else {
         setStats(puttResults);
       }
+      setIsLoadingGetResults(false);
     };
 
     fetchData();
@@ -164,6 +169,14 @@ export default function Stats() {
           borderTop: "3px dashed #bbb",
         }}
       />
+      {isLoadingGetResults ? (
+        <div
+          className="loader"
+          style={{ marginLeft: "auto", marginRight: "auto" }}
+        ></div>
+      ) : (
+        <></>
+      )}
       {statsForADayTables}
     </main>
   );
